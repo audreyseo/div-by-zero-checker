@@ -127,19 +127,17 @@ public class DivByZeroTransfer extends CFTransfer {
         // TODO
         switch (operator) {
             case PLUS:
-                if (areOpposites(lhs, rhs) || (equal(lhs, rhs) && equal(lhs, nonzero()))) {
-                    break; // Can't know anything about the sign of the result
-                } else if (equal(lhs, rhs) && !equal(lhs, nonzero())) {
-                    // if they're equal, and it's not both NonZero, then we know that the result is the same
-                    return lhs;
-                } else if (isNonZero(lhs)) {
-                    break; //
+                if (isTop(lhs) || isTop(rhs)) {
+                    break;
                 } else if ((isZero(lhs) && isNonZero(rhs)) || (isZero(rhs) && isNonZero(lhs))) {
                     if (isNonZero(rhs)) {
                         return rhs;
                     } else {
                         return lhs;
                     }
+                } else if (equal(lhs, rhs) && !equal(lhs, nonzero())) {
+                    // Case where lhs, rhs are both equal to either Pos, Neg, or Zero
+                    return lhs;
                 }
                 break;
             case MINUS:
