@@ -180,11 +180,17 @@ public class DivByZeroTransfer extends CFTransfer {
                 if (isTop(lhs) || isTop(rhs) || isZero(rhs)) break;
                 if (areOpposites(lhs, rhs)) {
                     return neg();
-                } else if (!isZero(lhs) && equal(lhs, rhs)) {
-                    return pos();
-                } else if (isZero(lhs)) {
-                    return zero();
                 } else if (isNonZero(lhs)) {
+                    // Only have the division by Pos, Neg, and NonZero
+                    return nonzero();
+                } else if (isZero(lhs)) {
+                    // Only have division by Pos, Neg, and NonZero left
+                    return zero();
+                } else if (equal(lhs, rhs) && (isPos(lhs) || isNeg(lhs))) {
+                    // Both Pos or both Neg
+                    return pos();
+                } else if (equal(rhs, nonzero())) {
+                    // lhs can only be Pos or Neg
                     return nonzero();
                 }
                 break;
