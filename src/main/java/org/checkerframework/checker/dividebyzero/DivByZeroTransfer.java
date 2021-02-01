@@ -71,7 +71,38 @@ public class DivByZeroTransfer extends CFTransfer {
             Comparison operator,
             AnnotationMirror lhs,
             AnnotationMirror rhs) {
-        // TODO
+        switch (operator) {
+            case EQ:
+                if (isZero(rhs)) {
+                    return zero();
+                }
+                break;
+            case NE:
+                if (isZero(rhs)) {
+                    return nonzero();
+                }
+                break;
+            case LT:
+                if (isNeg(rhs) || isZero(rhs)) {
+                    return neg();
+                }
+                break;
+            case LE:
+                if (isNeg(rhs)) {
+                    return neg();
+                }
+                break;
+            case GT:
+                if (isPos(rhs) || isZero(rhs)) {
+                    return pos();
+                }
+                break;
+            case GE:
+                if (isPos(rhs)) {
+                    return pos();
+                }
+                break;
+        }
         return lhs;
     }
 
@@ -94,7 +125,97 @@ public class DivByZeroTransfer extends CFTransfer {
             AnnotationMirror lhs,
             AnnotationMirror rhs) {
         // TODO
+        switch (operator) {
+            case PLUS:
+                if (areOpposites(lhs, rhs) || (equal(lhs, rhs) && equal(lhs, nonzero()))) {
+                    break; // Can't know anything about the sign of the result
+                } else if (equal(lhs, rhs) && !equal(lhs, nonzero())) {
+                    // if they're equal, and it's not both NonZero, then we know that the result is the same
+                    return lhs;
+                } else if (isNonZero(lhs)) {
+                    break; //
+                } else if ((isZero(lhs) && isNonZero(rhs)) || (isZero(rhs) && isNonZero(lhs))) {
+                    if (isNonZero(rhs)) {
+                        return rhs;
+                    } else {
+                        return lhs;
+                    }
+                }
+                break;
+            case MINUS:
+                if (isTop(lhs) || isTop(rhs)) {
+                    break;
+                }
+                if (isPos(lhs) && isNeg(rhs)) {
+                    return pos();
+                } else if (isNeg(lhs) && isPos(rhs)) {
+                    return neg();
+                }
+                break;
+            case TIMES:
+                if (isTop(lhs) || isTop(rhs)) {
+                    break;
+                } else if (areOpposites(lhs, rhs)) {
+                    return neg();
+                } else if (isZero(lhs) || isZero(rhs)) {
+                    return zero();
+                }
+                return pos();
+            case DIVIDE:
+            case MOD:
+                if (isTop(lhs) || isTop(rhs) || isZero(rhs)) break;
+                if (areOpposites(lhs, rhs)) {
+                    return neg();
+                } else if (!isZero(lhs) && equal(lhs, rhs)) {
+                    return pos();
+                } else if (isZero(lhs)) {
+                    return zero();
+                } else if (isNonZero(lhs)) {
+                    return nonzero();
+                }
+                break;
+        }
         return top();
+    }
+
+    private boolean isNeg(AnnotationMirror t) {
+        return equal(t, neg());
+    }
+
+    private boolean isPos(AnnotationMirror t) {
+        return equal(t, pos());
+    }
+
+    private boolean isNonZero(AnnotationMirror t) {
+        return !equal(t, bottom()) && equal(lub(t, nonzero()), nonzero());
+    }
+
+    private boolean isTop(AnnotationMirror t) {
+        return equal(t, top());
+    }
+
+    private boolean isZero(AnnotationMirror t) {
+        return equal(t, zero());
+    }
+
+    private AnnotationMirror nonzero() {
+        return reflect(NonZero.class);
+    }
+
+    private AnnotationMirror zero() {
+        return reflect(Zero.class);
+    }
+
+    private boolean areOpposites(AnnotationMirror a, AnnotationMirror b) {
+        return (equal(a, pos()) && equal(b, neg())) || (equal(a, neg()) && equal(b, pos()));
+    }
+
+    private AnnotationMirror neg() {
+        return reflect(Neg.class);
+    }
+
+    private AnnotationMirror pos() {
+        return reflect(Pos.class);
     }
 
     // ========================================================================
