@@ -141,14 +141,27 @@ public class DivByZeroTransfer extends CFTransfer {
                 }
                 break;
             case MINUS:
-                if (isTop(lhs) || isTop(rhs)) {
-                    break;
-                }
                 if (isPos(lhs) && isNeg(rhs)) {
                     return pos();
                 } else if (isNeg(lhs) && isPos(rhs)) {
                     return neg();
+                } else if (isZero(lhs)) {
+                    if (equal(lhs, rhs)) {
+                        return zero();
+                    } else if (isPos(rhs)) {
+                        return neg();
+                    } else if (isNeg(rhs)) {
+                        return pos();
+                    } else if (isNonZero(rhs)) {
+                        return nonzero();
+                    }
+                } else if (isZero(rhs)) {
+                    // We know the rhs is not Zero
+                    if (isPos(lhs) || isNeg(lhs) || isNonZero(lhs)) {
+                        return lhs;
+                    }
                 }
+                // All other cases are top
                 break;
             case TIMES:
                 if (isTop(lhs) || isTop(rhs)) {
@@ -157,7 +170,10 @@ public class DivByZeroTransfer extends CFTransfer {
                     return neg();
                 } else if (isZero(lhs) || isZero(rhs)) {
                     return zero();
+                } else if (equal(lhs, nonzero()) || equal(rhs, nonzero())) {
+                    return nonzero();
                 }
+                // Last remaining case: we have both neg or both pos
                 return pos();
             case DIVIDE:
             case MOD:
